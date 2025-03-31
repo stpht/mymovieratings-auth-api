@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { Pool } = require('pg');
-require('dotenv').config(); 
+require('dotenv').config(); // Load environment variables
 
 const app = express();
 const port = 5000;
@@ -28,7 +28,12 @@ pool.query('SELECT NOW()', (err, res) => {
 });
 
 const authRoutes = require('./routes/auth');
-app.use('/api/auth', authRoutes(pool)); 
+const movieRoutes = require('./routes/movies'); // Add movie routes
+const ratingRoutes = require('./routes/ratings'); // Add rating routes
+
+app.use('/api/auth', authRoutes(pool)); // Pass the pool to authRoutes
+app.use('/api/movies', movieRoutes(pool)); // Add movie routes
+app.use('/api/ratings', ratingRoutes(pool)); // Add rating routes
 
 app.get('/', (req, res) => {
   res.send('Auth API is running');
