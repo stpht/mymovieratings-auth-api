@@ -1,9 +1,23 @@
 const express = require('express');
 const router = express.Router();
+const jwt = require('jsonwebtoken');
+
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.split(' ')[1];
+
+  if (token == null) return res.sendStatus(401);
+
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.sendStatus(403);
+    req.user = user;
+    next();
+  });
+};
 
 module.exports = (pool) => {
   // POST /api/ratings (Add a rating)
-  router.post('/', async (req, res) => {
+  router.post('/', authenticateToken, async (req, res) => {
     try {
       const { user_id, movie_id, rating, comment } = req.body;
       const result = await pool.query(
@@ -43,7 +57,7 @@ module.exports = (pool) => {
   });
 
   // PUT /api/ratings/:id (Update a rating)
-  router.put('/:id', async (req, res) => {
+  router.put('/:id', authenticateToken, async (req, res) => {
     try {
       const { user_id, movie_id, rating, comment } = req.body;
       const result = await pool.query(
@@ -61,7 +75,7 @@ module.exports = (pool) => {
   });
 
   // DELETE /api/ratings/:id (Delete a rating)
-  router.delete('/:id', async (req, res) => {
+  router.delete('/:id', authenticateToken, async (req, res) => {
     try {
       const result = await pool.query('DELETE FROM ratings WHERE id = $1 RETURNING *', [req.params.id]);
       if (result.rows.length === 0) {
